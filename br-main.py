@@ -1,6 +1,7 @@
 # coding=utf-8
 
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 from bs4 import BeautifulSoup
@@ -60,6 +61,7 @@ for author_url in uniqueUrls:
 
     #result
     outcome = list()
+    outcome_perc = list()
 
     for dat in dates:
         #concat url
@@ -103,13 +105,18 @@ for author_url in uniqueUrls:
     #                #print(bet.find('div', "status"))
     #        #break
         outcome.extend(dat_outcome)
+        if len(dat_outcome) :
+            outcome_perc.append(
+                round(sum(dat_outcome) / len(dat_outcome) * 100, 1))
+        else :
+            outcome_perc.append(100.00)
         #print(len(dat_outcome))
         #if (len(dat_outcome) > 0):
         #    print(sum(dat_outcome) / len(dat_outcome))
     if (len(outcome) > 0):
-
         print(
-            round(sum(outcome) / len(outcome) * 100, 3),
-            round((sum(outcome) - len(outcome)) * 10, 3 ),
+            round(sum(outcome) / len(outcome) * 100, 1),
+            round((sum(outcome) - len(outcome)) * 10, 1 ),
             len(outcome),
             author_name)
+        print(outcome_perc)
