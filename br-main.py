@@ -109,7 +109,7 @@ for author_url in uniqueUrls:
             outcome_perc.append(
                 round(sum(dat_outcome) / len(dat_outcome) * 100, 1))
         else :
-            outcome_perc.append(100.00)
+            outcome_perc.append(float('nan'))
         #print(len(dat_outcome))
         #if (len(dat_outcome) > 0):
         #    print(sum(dat_outcome) / len(dat_outcome))
