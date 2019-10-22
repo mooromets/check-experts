@@ -62,6 +62,7 @@ for author_url in uniqueUrls:
     #result
     outcome = list()
     outcome_perc = list()
+    outcome_val = list()
 
     for dat in dates:
         #concat url
@@ -108,8 +109,11 @@ for author_url in uniqueUrls:
         if len(dat_outcome) :
             outcome_perc.append(
                 round(sum(dat_outcome) / len(dat_outcome) * 100, 1))
+            outcome_val.append(
+                round((sum(dat_outcome) - len(dat_outcome)) * 10, 3))
         else :
             outcome_perc.append(float('nan'))
+            outcome_val.append(float('nan'))
         #print(len(dat_outcome))
         #if (len(dat_outcome) > 0):
         #    print(sum(dat_outcome) / len(dat_outcome))
@@ -120,3 +124,4 @@ for author_url in uniqueUrls:
             len(outcome),
             author_name)
         print(outcome_perc)
+        print(outcome_val)
