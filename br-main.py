@@ -8,8 +8,6 @@ from bs4 import BeautifulSoup
 import re
 import os
 import random
-#import pandas as pd
-#from tabulate import tabulate
 
 #start with experts list
 url = "https://bookmaker-ratings.ru/forecast_homepage/"
@@ -21,8 +19,8 @@ driver = webdriver.Firefox(options=options)
 driver.implicitly_wait(10)
 driver.get(url)
 
+#After opening the url above, close AD
 try:
-    #After opening the url above, close AD
     adv_button = driver.find_element_by_id('float-banner-close')
     adv_button.click()
 except NoSuchElementException:
@@ -35,9 +33,6 @@ python_button.click()
 #page source
 soup_level1=BeautifulSoup(driver.page_source, 'lxml')
 
-####select one player (debug mode)
-###link = random.choice(soup_level1.find_all('a', href=re.compile("author")))
-
 allUrls = list()
 for link in soup_level1.find_all('a', href=re.compile("author")):
     author_url = link.get("href")
@@ -46,20 +41,12 @@ uniqueUrls = set(allUrls)
 
 for author_url in uniqueUrls:
     author_name = re.search("author/.*/$", author_url).group()
-    #print (author_url)
-
-    ##navigate to player's page
-    #driver.get(author_url)
-
-    ##open statistic section
-    #stats = driver.find_element_by_xpath("//a[@data-section='statistic']")
-    #stats.click()
 
     #TODO generate dates
     dates = ["2018-10", "2018-11", "2018-12", "2019-01", "2019-02", "2019-03",
     "2019-04", "2019-05", "2019-06", "2019-07", "2019-08", "2019-09", "2019-10"]
 
-    #result
+    #results
     outcome = list()
     outcome_perc = list()
     outcome_val = list()
@@ -67,13 +54,10 @@ for author_url in uniqueUrls:
     for dat in dates:
         #concat url
         driver.get(author_url + "#statistic?month=" + dat)
-
         #page source to Beautiful Soup
         soup_level2=BeautifulSoup(driver.page_source, 'lxml')
-
-        ##monthly result
+        ##onthly result
         dat_outcome = list()
-
         #loop on all bets
         for bet in soup_level2.find_all('div', "one-bet"):
             #skip tablet and head rows
@@ -96,15 +80,6 @@ for author_url in uniqueUrls:
                 outcomeVal = outcomeDict.get(bet_stat.string, 0.0)
                 if bet_stat.string != u'Ожидание':
                     dat_outcome.append(outcomeVal)
-    #
-    #            print(bet_stat.string)
-    #            utxt = u'Проигрыш'#.encode('utf-8')
-    #            if bet_stat.string == utxt:
-    #                print("bingo!")
-    #                #print(bet.find('div', "type"))
-    #                #print(bet.find('div', "stake"))
-    #                #print(bet.find('div', "status"))
-    #        #break
         outcome.extend(dat_outcome)
         if len(dat_outcome) :
             outcome_perc.append(
@@ -114,9 +89,6 @@ for author_url in uniqueUrls:
         else :
             outcome_perc.append(float('nan'))
             outcome_val.append(float('nan'))
-        #print(len(dat_outcome))
-        #if (len(dat_outcome) > 0):
-        #    print(sum(dat_outcome) / len(dat_outcome))
     if (len(outcome) > 0):
         print(
             round(sum(outcome) / len(outcome) * 100, 1),
