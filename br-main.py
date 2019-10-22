@@ -34,61 +34,82 @@ python_button.click()
 #page source
 soup_level1=BeautifulSoup(driver.page_source, 'lxml')
 
-#select one player (debug mode)
-link = random.choice(soup_level1.find_all('a', href=re.compile("author")))
+####select one player (debug mode)
+###link = random.choice(soup_level1.find_all('a', href=re.compile("author")))
 
-#for link in soup_level1.find_all('a', href=re.compile("author")):
-author_url = link.get("href")
-print (author_url)
+allUrls = list()
+for link in soup_level1.find_all('a', href=re.compile("author")):
+    author_url = link.get("href")
+    allUrls.append(author_url)
+uniqueUrls = set(allUrls)
 
-##navigate to player's page
-#driver.get(author_url)
+for author_url in uniqueUrls:
+    author_name = re.search("author/.*/$", author_url).group()
+    #print (author_url)
 
-##open statistic section
-#stats = driver.find_element_by_xpath("//a[@data-section='statistic']")
-#stats.click()
+    ##navigate to player's page
+    #driver.get(author_url)
 
-#TODO generate dates
-dates = ["2018-10", "2018-11", "2018-12", "2019-01", "2019-02", "2019-03",
-"2019-04", "2019-05", "2019-06", "2019-07", "2019-08", "2019-09", "2019-10"]
+    ##open statistic section
+    #stats = driver.find_element_by_xpath("//a[@data-section='statistic']")
+    #stats.click()
 
-#result
-outcome = list()
+    #TODO generate dates
+    dates = ["2018-10", "2018-11", "2018-12", "2019-01", "2019-02", "2019-03",
+    "2019-04", "2019-05", "2019-06", "2019-07", "2019-08", "2019-09", "2019-10"]
 
-for dat in dates:
-    #concat url
-    driver.get(author_url + "#statistic?month=" + dat)
+    #result
+    outcome = list()
 
-    #page source to Beautiful Soup
-    soup_level2=BeautifulSoup(driver.page_source, 'lxml')
+    for dat in dates:
+        #concat url
+        driver.get(author_url + "#statistic?month=" + dat)
 
-    ##monthly result
-    dat_outcome = list()
+        #page source to Beautiful Soup
+        soup_level2=BeautifulSoup(driver.page_source, 'lxml')
 
-    #loop on all bets
-    for bet in soup_level2.find_all('div', "one-bet"):
-        #skip tablet and head rows
-        if len(set(bet['class']) & set(["head", "tablet-version"])) == 0:
-            factor_tag = bet.find('div', "factor")
-            factor_value_tag = factor_tag.find('div', "factor-value")
-            factor = float(factor_value_tag["data-factor-dec"].replace(",", "."))
-            dat_outcome.append(factor)
+        ##monthly result
+        dat_outcome = list()
 
+        #loop on all bets
+        for bet in soup_level2.find_all('div', "one-bet"):
+            #skip tablet and head rows
+            if len(set(bet['class']) & set(["head", "tablet-version"])) == 0:
+                #get factor
+                factor_tag = bet.find('div', "factor")
+                factor_value_tag = factor_tag.find('div', "factor-value")
+                if (factor_value_tag is None) :
+                    print(author_name, dat, factor_tag)
+                    factor = 1
+                else :
+                    factor = float(factor_value_tag["data-factor-dec"].replace(",", "."))
+                #get outcome
+                bet_stat = bet.find('div', "status")
+                outcomeDict = {
+                    u'Проигрыш' : 0.0,
+                    u'Возврат' : 1.0,
+                    u'Выигрыш' : factor
+                }
+                outcomeVal = outcomeDict.get(bet_stat.string, 0.0)
+                if bet_stat.string != u'Ожидание':
+                    dat_outcome.append(outcomeVal)
+    #
+    #            print(bet_stat.string)
+    #            utxt = u'Проигрыш'#.encode('utf-8')
+    #            if bet_stat.string == utxt:
+    #                print("bingo!")
+    #                #print(bet.find('div', "type"))
+    #                #print(bet.find('div', "stake"))
+    #                #print(bet.find('div', "status"))
+    #        #break
+        outcome.extend(dat_outcome)
+        #print(len(dat_outcome))
+        #if (len(dat_outcome) > 0):
+        #    print(sum(dat_outcome) / len(dat_outcome))
+    if (len(outcome) > 0):
 
-#            bet_stat = bet.find('div', "status")
-#            print(bet_stat.string)
-#            utxt = u'Проигрыш'#.encode('utf-8')
-#            if bet_stat.string == utxt:
-#                print("bingo!")
-#                #print(bet.find('div', "type"))
-#                #print(bet.find('div', "stake"))
-#                #print(bet.find('div', "status"))
-#        #break
-    outcome.extend(dat_outcome)
-    print(len(dat_outcome))
-    if (len(dat_outcome) > 0):
-        print(sum(dat_outcome) / len(dat_outcome))
-
-print(len(outcome))
-if (len(outcome) > 0):
-    print(sum(outcome) / len(outcome))
+        print(
+            round(sum(outcome) / len(outcome) * 100, 3),
+            round((sum(outcome) - len(outcome)) * 10, 3 ),
+            len(outcome),
+            author_name)
