@@ -24,7 +24,7 @@ try:
     adv_button = driver.find_element_by_id('float-banner-close')
     adv_button.click()
 except NoSuchElementException:
-    xxx = 0
+    pass
 
 #expand all predictors
 python_button = driver.find_element_by_class_name("predictors-reveal-btn")
