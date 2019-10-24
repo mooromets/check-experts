@@ -56,6 +56,7 @@ allbets = []
 for author_url in uniqueUrls:
 #for author_url in [random.choice(list(uniqueUrls))]: #DEBUG
     author_name = re.search("/[A-Za-z_0-9]+/$", author_url).group().replace('/',"")
+    author_bets = []
 
     #iterate over dates
     now = datetime.datetime.now()
@@ -105,7 +106,7 @@ for author_url in uniqueUrls:
                 record_bet["date"] = bet_date.string
                 record_bet["stake"] = bet.find('div', "stake").string
                 record_bet["author"] = author_name
-                allbets.append(record_bet)
+                author_bets.append(record_bet)
         #check acivity
         if not was_active:
             months_inactive = months_inactive + 1
@@ -118,7 +119,10 @@ for author_url in uniqueUrls:
                 break
         else :
             months_inactive = 0
-            print("LOG", "scraper", "overall entries number", len(allbets), "author", author_name, dat)
+            print("LOG", "scraper", "total author bets", len(author_bets), "author", author_name, dat)
+    unique_author_bets = [dict(t) for t in {tuple(d.items()) for d in author_bets}]
+    allbets.extend(unique_author_bets)
+    print("LOG", "scraper", "author", author_name, "unique author bets", len(unique_author_bets), "total bets", len(allbets))
 
 df1 = pd.DataFrame(allbets)
 df1.to_csv(r'bets_history.csv', index = None, header=True,  encoding='utf-8')
