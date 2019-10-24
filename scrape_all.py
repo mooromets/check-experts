@@ -34,8 +34,9 @@ driver.get(url)
 try:
     adv_button = driver.find_element_by_id('float-banner-close')
     adv_button.click()
+    print("LOG", "scraper", "AD closed")
 except NoSuchElementException:
-    pass
+    print("LOG", "scraper", "no AD")
 
 #expand all predictors
 python_button = driver.find_element_by_class_name("predictors-reveal-btn")
@@ -49,12 +50,12 @@ for link in soup_level1.find_all('a', href=re.compile("author")):
     author_url = link.get("href")
     allUrls.append(author_url)
 uniqueUrls = set(allUrls)
+print("LOG", "scraper", "experts' urls=",len(allUrls), "unique urls:", len(uniqueUrls))
 
 allbets = []
 for author_url in uniqueUrls:
-#author_url = random.choice(list(uniqueUrls)) #DEBUG
+#for author_url in [random.choice(list(uniqueUrls))]: #DEBUG
     author_name = re.search("/[A-Za-z_0-9]+/$", author_url).group().replace('/',"")
-    print(author_name)
 
     #iterate over dates
     now = datetime.datetime.now()
@@ -63,6 +64,7 @@ for author_url in uniqueUrls:
         #time.sleep(10) #DEBUG decrease the requests frequency
         #concat url
         driver.get(author_url + "#statistic?month=" + dat)
+        print("LOG", "scraper", "open link", driver.current_url)
         #page source to Beautiful Soup
         soup_level2=BeautifulSoup(driver.page_source, 'lxml')
         ##onthly result
@@ -79,7 +81,7 @@ for author_url in uniqueUrls:
                 factor_tag = bet.find('div', "factor")
                 factor_value_tag = factor_tag.find('div', "factor-value")
                 if (factor_value_tag is None) :
-                    print(author_name, dat, factor_tag)
+                    print("LOG", "scraper", "empty facotr", author_name, dat, factor_tag)
                     continue
                 else :
                     record_bet["factor"] = float(
@@ -109,14 +111,15 @@ for author_url in uniqueUrls:
             months_inactive = months_inactive + 1
             #report inactivity
             if (months_inactive == 6):
-                print (author_name, "inactive 6 months", dat)
+                print("LOG", "scraper", "author", author_name, "inactive 6 months", dat)
             #stop if more than a year of inactivity
             if (months_inactive > 13):
-                print (author_name, "stopped", dat)
+                print ("LOG", "scraper", "author", author_name, "stopped", dat)
                 break
         else :
             months_inactive = 0
-    print("entries", len(allbets))
+            print("LOG", "scraper", "overall entries number", len(allbets), "author", author_name, dat)
 
 df1 = pd.DataFrame(allbets)
 df1.to_csv(r'bets_history.csv', index = None, header=True,  encoding='utf-8')
+print ("LOG", "scraper", "file saved", 'bets_history.csv')
