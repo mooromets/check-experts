@@ -5,11 +5,11 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 from bs4 import BeautifulSoup
+from datetime import datetime
 import pandas as pd
 import re
 import os
 import random
-import datetime
 import time
 
 # iterate over year-month backwards
@@ -34,9 +34,9 @@ driver.get(url)
 try:
     adv_button = driver.find_element_by_id('float-banner-close')
     adv_button.click()
-    print("LOG", "scraper", "AD closed")
+    print(str(datetime.now()), "LOG", "scraper", "AD closed")
 except NoSuchElementException:
-    print("LOG", "scraper", "no AD")
+    print(str(datetime.now()), "LOG", "scraper", "no AD")
 
 #expand all predictors
 python_button = driver.find_element_by_class_name("predictors-reveal-btn")
@@ -50,23 +50,23 @@ for link in soup_level1.find_all('a', href=re.compile("author")):
     author_url = link.get("href")
     allUrls.append(author_url)
 uniqueUrls = set(allUrls)
-print("LOG", "scraper", "experts' urls=",len(allUrls), "unique urls:", len(uniqueUrls))
+print(str(datetime.now()), "LOG", "scraper", "experts' urls=",len(allUrls), "unique urls:", len(uniqueUrls))
 
 allbets = []
-for author_url in uniqueUrls:
-#DEBUG for author_url in [random.choice(list(uniqueUrls))]: 
+for (author_cnt, author_url) in enumerate(uniqueUrls):
+#DEBUG for author_url in [random.choice(list(uniqueUrls))]:
 #DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/arturio/']:
     author_name = re.search("/[A-Za-z_0-9]+/$", author_url).group().replace('/',"")
     author_bets = []
 
     #iterate over dates
-    now = datetime.datetime.now()
+    now = datetime.now()
     months_inactive = 0
     for dat in month_year_down_iter(now.month, now.year, 3, 2015)  :
-        #time.sleep(10) #DEBUG decrease the requests frequency
+        if months_inactive == 0: time.sleep(random.randrange(3, 11)) #DEBUG decrease the requests frequency
         #concat url
         driver.get(author_url + "#statistic?month=" + dat)
-        print("LOG", "scraper", "open link", driver.current_url)
+        print(str(datetime.now()), "LOG", "scraper", "open link", driver.current_url)
         #page source to Beautiful Soup
         soup_level2=BeautifulSoup(driver.page_source, 'lxml')
         ##onthly result
@@ -97,7 +97,7 @@ for author_url in uniqueUrls:
                     factor_tag = bet.find('div', "factor")
                     factor_value_tag = factor_tag.find('div', "factor-value")
                     if (factor_value_tag is None) :
-                        print("ERR", "scraper", "empty factor", author_name, dat, factor_tag)
+                        print(str(datetime.now()), "ERR", "scraper", "empty factor", author_name, dat, factor_tag)
                         continue
                     else :
                         record_bet["factor"] = float(
@@ -116,7 +116,7 @@ for author_url in uniqueUrls:
                         factor_tag = final_tag.find('div', "factor")
                         factor_value_tag = factor_tag.find('div', "factor-value")
                         if (factor_value_tag is None) :
-                            print("ERR", "scraper", "empty factor", author_name, dat, factor_tag)
+                            print(str(datetime.now()), "ERR", "scraper", "empty factor", author_name, dat, factor_tag)
                             continue
                         else :
                             record_bet["factor"] = float(
@@ -136,7 +136,7 @@ for author_url in uniqueUrls:
                                 factor_tag = exp_row.find('div', "factor")
                                 factor_value_tag = factor_tag.find('div', "factor-value")
                                 if (factor_value_tag is None) :
-                                    print("ERR", "scraper", "empty factor", author_name, dat, factor_tag)
+                                    print(str(datetime.now()), "ERR", "scraper", "empty factor", author_name, dat, factor_tag)
                                     continue
                                 else :
                                     record_bet["match"] = record_bet["match"] + ' ' + factor_value_tag["data-factor-dec"].replace(",", ".")
@@ -144,7 +144,7 @@ for author_url in uniqueUrls:
                         record_bet["stake"] = record_bet["match"].count('.')
                         #TODO remove code duplicates
                 else :
-                    print("ERR", "scraper", "unknown bet type", author_name, dat, record_bet["type"])
+                    print(str(datetime.now()), "ERR", "scraper", "unknown bet type", author_name, dat, record_bet["type"])
                     continue
                 record_bet["author"] = author_name
                 author_bets.append(record_bet)
@@ -153,18 +153,19 @@ for author_url in uniqueUrls:
             months_inactive = months_inactive + 1
             #report inactivity
             if (months_inactive == 6):
-                print("LOG", "scraper", "author", author_name, "inactive 6 months", dat)
+                print(str(datetime.now()), "LOG", "scraper", "author", author_name, "inactive 6 months", dat)
             #stop if more than a year of inactivity
             if (months_inactive > 13):
-                print ("LOG", "scraper", "author", author_name, "stopped", dat)
+                print(str(datetime.now()), "LOG", "scraper", "author", author_name, "stopped", dat)
                 break
         else :
             months_inactive = 0
-            print("LOG", "scraper", "total author bets", len(author_bets), "author", author_name, dat)
+            print(str(datetime.now()), "LOG", "scraper", "total author bets", len(author_bets), "author", author_name, dat)
     unique_author_bets = [dict(t) for t in {tuple(d.items()) for d in author_bets}]
     allbets.extend(unique_author_bets)
-    print("LOG", "scraper", "author", author_name, "unique author bets", len(unique_author_bets), "total bets", len(allbets))
+    print(str(datetime.now()), "LOG", "scraper", "author", author_name, "unique author bets", len(unique_author_bets), "total bets", len(allbets))
+    print(str(datetime.now()), "LOG", "scraper", "parsing progress", round(author_cnt / len(uniqueUrls) * 100))
 
 df1 = pd.DataFrame(allbets)
 df1.to_csv(r'bets_history.csv', index = None, header=True,  encoding='utf-8')
-print ("LOG", "scraper", "file saved", 'bets_history.csv')
+print(str(datetime.now()), "LOG", "scraper", "file saved", 'bets_history.csv')
