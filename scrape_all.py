@@ -53,7 +53,7 @@ uniqueUrls = set(allUrls)
 print(str(datetime.now()), "LOG", "scraper", "experts' urls=",len(allUrls), "unique urls:", len(uniqueUrls))
 
 allbets = []
-for (author_cnt, author_url) in enumerate(uniqueUrls):
+for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
 #DEBUG for author_url in [random.choice(list(uniqueUrls))]:
 #DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/arturio/']:
     author_name = re.search("/[A-Za-z_0-9]+/$", author_url).group().replace('/',"")
@@ -63,7 +63,7 @@ for (author_cnt, author_url) in enumerate(uniqueUrls):
     now = datetime.now()
     months_inactive = 0
     for dat in month_year_down_iter(now.month, now.year, 3, 2015)  :
-        if months_inactive == 0: time.sleep(random.randrange(3, 11)) #DEBUG decrease the requests frequency
+        #if months_inactive == 0: time.sleep(random.randrange(3, 11)) #DEBUG decrease the requests frequency
         #concat url
         driver.get(author_url + "#statistic?month=" + dat)
         print(str(datetime.now()), "LOG", "scraper", "open link", driver.current_url)
@@ -164,7 +164,7 @@ for (author_cnt, author_url) in enumerate(uniqueUrls):
     unique_author_bets = [dict(t) for t in {tuple(d.items()) for d in author_bets}]
     allbets.extend(unique_author_bets)
     print(str(datetime.now()), "LOG", "scraper", "author", author_name, "unique author bets", len(unique_author_bets), "total bets", len(allbets))
-    print(str(datetime.now()), "LOG", "scraper", "parsing progress", round(author_cnt / len(uniqueUrls) * 100))
+    print(str(datetime.now()), "LOG", "scraper", "parsing progress, %", round(float(author_cnt) / len(uniqueUrls) * 100))
 
 df1 = pd.DataFrame(allbets)
 df1.to_csv(r'bets_history.csv', index = None, header=True,  encoding='utf-8')
