@@ -52,7 +52,8 @@ for link in soup_level1.find_all('a', href=re.compile("author")):
 uniqueUrls = set(allUrls)
 print(str(datetime.now()), "LOG", "scraper", "experts' urls=",len(allUrls), "unique urls:", len(uniqueUrls))
 
-allbets = []
+#allbets = []
+total = 0
 for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
 #DEBUG for author_url in [random.choice(list(uniqueUrls))]:
 #DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/arturio/']:
@@ -63,7 +64,7 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
     now = datetime.now()
     months_inactive = 0
     for dat in month_year_down_iter(now.month, now.year, 3, 2015)  :
-        #if months_inactive == 0: time.sleep(random.randrange(3, 11)) #DEBUG decrease the requests frequency
+        if months_inactive == 0: time.sleep(random.randrange(8, 15)) #decrease the requests frequency
         #concat url
         driver.get(author_url + "#statistic?month=" + dat)
         print(str(datetime.now()), "LOG", "scraper", "open link", driver.current_url)
@@ -162,10 +163,13 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
             months_inactive = 0
             print(str(datetime.now()), "LOG", "scraper", "total author bets", len(author_bets), "author", author_name, dat)
     unique_author_bets = [dict(t) for t in {tuple(d.items()) for d in author_bets}]
-    allbets.extend(unique_author_bets)
-    print(str(datetime.now()), "LOG", "scraper", "author", author_name, "unique author bets", len(unique_author_bets), "total bets", len(allbets))
+    #allbets.extend(unique_author_bets)
+    total = len(unique_author_bets)
+    print(str(datetime.now()), "LOG", "scraper", "author", author_name, "unique author bets", len(unique_author_bets), "total bets", total)
     print(str(datetime.now()), "LOG", "scraper", "parsing progress, %", round(float(author_cnt) / len(uniqueUrls) * 100))
+    df11 = pd.DataFrame(unique_author_bets)
+    df11.to_csv(author_name + r'bets_history.csv', index = None, header=True,  encoding='utf-8')
 
-df1 = pd.DataFrame(allbets)
-df1.to_csv(r'bets_history.csv', index = None, header=True,  encoding='utf-8')
-print(str(datetime.now()), "LOG", "scraper", "file saved", 'bets_history.csv')
+#df1 = pd.DataFrame(allbets)
+#df1.to_csv(r'bets_history.csv', index = None, header=True,  encoding='utf-8')
+#print(str(datetime.now()), "LOG", "scraper", "file saved", 'bets_history.csv')
