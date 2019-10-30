@@ -5,6 +5,8 @@ import br_scrape
 import unittest
 from bs4 import BeautifulSoup
 import pandas as pd
+import os
+from pandas.util.testing import assert_frame_equal
 
 #XXX test already known issues only
 #TODO add full tests
@@ -189,7 +191,7 @@ class TestReadBet(unittest.TestCase):
                 'status': 'L',
                 'type': 'accu'})
 
-class TestMerge(unittest.TestCase):
+class TestMergeCrawledSaved(unittest.TestCase):
     def test_no_saved(self):
         df = pd.DataFrame({"arr" : ['one', 'two', 'three']})
         res = br_scrape.merge_crawled_saved(df, None)
@@ -224,6 +226,53 @@ class TestMerge(unittest.TestCase):
         self.assertEqual(res.shape, (5, 9))
         self.assertEqual(list(res.columns), list(['author', 'crawled-date', 'date', 'factor', 'match', 'placed-date', 'stake', 'status', 'type']))
         self.assertEqual(res['crawled-date'].sum(), 10+20+30+42+43)
+
+class TestAppendDfFile(unittest.TestCase):
+    def test_empty_df(self):
+        self.assertEqual(br_scrape.append_df_to_file(pd.DataFrame(), "path"), False)
+
+    def test_append_simple(self):
+        df = pd.DataFrame({
+            "author" :      ['me', 'me'],
+            'crawled-date': ["29-10-2019 22:07", "29-10-2019 22:07"],
+            'date':         ['28.09.2019', '22.09.2019'],
+            'factor':       [2.4,  2.08],
+            'match':        [u'Атлетико Мадрид - Реал Мадрид', u'Челси - Ливерпуль'],
+            'placed-date':  ['27.09.2019', '21.09.2019'],
+            'stake':        [u'П1', u'П2'],
+            'status':       ['L',  'W'],
+            'type':         ['single', 'single']
+            })
+        df_crawled = pd.DataFrame({
+            "author" :      ['me', 'me', 'me', 'me'],
+            'crawled-date': ["30-10-2019 12:07", "30-10-2019 12:07", "30-10-2019 12:07", "30-10-2019 12:07"],
+            'date':         ['28.09.2019', '22.09.2019', '01.10.2019', '01.10.2019'],
+            'factor':       [2.4,  2.08, 2.45,  3.7],
+            'match':        [u'Атлетико Мадрид - Реал Мадрид', u'Челси - Ливерпуль', u'Реал Мадрид - Брюгге', u'Локомотив - Атлетико Мадрид'],
+            'placed-date':  ['27.09.2019', '21.09.2019', '30.09.2019', '30.09.2019'],
+            'stake':        [u'П1', u'П2', u'П1 всухую', u'X'],
+            'status':       ['L',  'W', 'L',  'L'],
+            'type':         ['single', 'single', 'single', 'single']
+            })
+        df_sample_res = pd.DataFrame({
+            "author" :      ['me', 'me', 'me', 'me'],
+            'crawled-date': ["29-10-2019 22:07", "29-10-2019 22:07", "30-10-2019 12:07", "30-10-2019 12:07"],
+            'date':         ['28.09.2019', '22.09.2019', '01.10.2019', '01.10.2019'],
+            'factor':       [2.4,  2.08, 2.45,  3.7],
+            'match':        [u'Атлетико Мадрид - Реал Мадрид', u'Челси - Ливерпуль', u'Реал Мадрид - Брюгге', u'Локомотив - Атлетико Мадрид'],
+            'placed-date':  ['27.09.2019', '21.09.2019', '30.09.2019', '30.09.2019'],
+            'stake':        [u'П1', u'П2', u'П1 всухую', u'X'],
+            'status':       ['L',  'W', 'L',  'L'],
+            'type':         ['single', 'single', 'single', 'single']
+            })
+        PATH = "tmp.csv"
+        df.to_csv(PATH, index = None, header=True,  encoding='utf-8')
+        br_scrape.append_df_to_file(df_crawled, PATH)
+        df_new = pd.read_csv(PATH, encoding="utf-8")
+        self.assertEqual(df_new.shape, (4, 9))
+        self.assertEqual(list(df_new.columns), list(['author', 'crawled-date', 'date', 'factor', 'match', 'placed-date', 'stake', 'status', 'type']))
+        assert_frame_equal(df_new, df_sample_res)
+        os.remove(PATH)
 
 
 if __name__ == '__main__':

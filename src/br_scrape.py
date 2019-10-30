@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import re
 from datetime import datetime
 import pandas as pd
-
+import os
 
 # produce year-month backwards iterators
 def month_year_down_iter(start_month, start_year, end_month, end_year):
@@ -113,7 +113,7 @@ def read_bet(bet_src, time_crawled, author_name):
         return record_bet
 
 
-# append df_crawled dataframe to df_saved one:
+# merge df_crawled dataframe with df_saved one:
 # 1. all existing records in df_saved stay unchaged
 # 2. only records not present in df_saved will be upmerged
 # 3. records from df_crawled and df_saved are regarded as equal,
@@ -134,3 +134,19 @@ def merge_crawled_saved(df_crawled, df_saved):
         return df_merge \
             .rename(columns={"crawled-date_x": "crawled-date"}) \
             .drop(columns=['join', 'crawled-date_y'])
+
+
+# append dataframe to a file. If file doesn't exist it will be added
+def append_df_to_file(df, filepath):
+    if (len(df) == 0):
+        return False
+    # read already saved data
+    df_saved = None
+    if os.path.exists(filepath):
+        try:
+            df_saved = pd.read_csv(filepath, encoding="utf-8")
+        except (pd.errors.EmptyDataError, OSError):
+            pass
+    df_merge = merge_crawled_saved(df, df_saved)
+    df_merge.to_csv(filepath, index = None, header=True,  encoding='utf-8')
+    return True

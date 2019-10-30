@@ -95,18 +95,6 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
         #nothing to do
         #TODO add info message
         continue
-    # read already saved data
     path = os.path.join("..", out_dir, author_name + ".csv") #TODO fix pathes
-    df_saved = None
-    if os.path.exists(path):
-        try:
-            df_saved = pd.read_csv(path,
-                                encoding="utf-8",
-                                parse_dates=[1,4], #TODO fix
-                                dayfirst=True)
-        except (pd.errors.EmptyDataError, OSError):
-            pass
-
-    df_merge = br_scrape.merge_crawled_saved(df_crawled, df_saved)
-    df_merge.to_csv(path, index = None, header=True,  encoding='utf-8')
+    br_scrape.append_df_to_file(df_crawled, path)
     print(str(datetime.now()), "LOG", "scraper", "parsing progress, %", round(float(author_cnt) / len(uniqueUrls) * 100))
