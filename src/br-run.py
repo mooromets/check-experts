@@ -45,6 +45,8 @@ uniqueUrls = br_scrape.get_urls_from_html(driver.page_source, "author")
 
 print(str(datetime.now()), "LOG", "scraper", "experts' urls=", len(uniqueUrls))
 
+ERR_CNT = 0
+
 total = 0
 for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
 #DEBUG for author_url in [random.choice(list(uniqueUrls))]:
@@ -76,6 +78,10 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
             else:
                 was_active = True
                 author_bets.append(newBet)
+                if not br_scrape.check_date_month(newBet['placed-date'], dat):
+                    ERR_CNT = ERR_CNT + 1
+                    print(str(datetime.now()), "ERR", "scraper", "WRONG MONTH", author_name, newBet["placed-date"], dat)
+
         #check acivity
         if not was_active:
             months_inactive = months_inactive + 1
@@ -100,3 +106,5 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
     path = os.path.join("..", out_dir, author_name + ".csv") #TODO fix pathes
     br_scrape.append_df_to_file(df_crawled, path)
     print(str(datetime.now()), "LOG", "scraper", "parsing progress, %", round(float(author_cnt) / len(uniqueUrls) * 100))
+
+print(str(datetime.now()), "errors count ", ERR_CNT)

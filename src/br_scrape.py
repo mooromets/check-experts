@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 import pandas as pd
 import os
+import calendar
 
 # produce year-month backwards iterators
 def month_year_down_iter(start_month, start_year, end_month, end_year):
@@ -150,3 +151,13 @@ def append_df_to_file(df, filepath):
     df_merge = merge_crawled_saved(df, df_saved)
     df_merge.to_csv(filepath, index = None, header=True,  encoding='utf-8')
     return True
+
+def check_date_month(check_date, year_month):
+    from_date =  datetime.strptime(year_month + '-01', "%Y-%m-%d")
+    last_day = calendar.monthrange(from_date.year, from_date.month)[1]
+    to_date = datetime(from_date.year, from_date.month, last_day)
+    check_date_val = datetime.strptime(check_date, "%d.%m.%Y")
+    if (check_date_val >= from_date) & (check_date_val <= to_date):
+        return True
+    else:
+        return False

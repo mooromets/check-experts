@@ -275,5 +275,14 @@ class TestAppendDfFile(unittest.TestCase):
         os.remove(PATH)
 
 
+class TestCheckDateMonth(unittest.TestCase):
+    def test_simple(self):
+        self.assertEqual(br_scrape.check_date_month('10.10.2010','2010-10'), True)
+        self.assertEqual(br_scrape.check_date_month('01.11.2010','2010-11'), True)
+        self.assertEqual(br_scrape.check_date_month('31.12.2010','2010-12'), True)
+        self.assertEqual(br_scrape.check_date_month('31.12.2010','2011-01'), False)
+        self.assertEqual(br_scrape.check_date_month('31.05.2018','2018-06'), False)
+
+
 if __name__ == '__main__':
     unittest.main()
