@@ -53,7 +53,7 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
 #DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/elvin/']:
 #DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/arturio/']:
 
-    driver.get(author_url) #author url has to be opened before navigating to staistics over months
+#    driver.get(author_url) #author url has to be opened before navigating to staistics over months
     author_name = re.search("/[A-Za-z_0-9]+/$", author_url).group().replace('/',"")
     author_bets = []
 
