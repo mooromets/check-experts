@@ -95,6 +95,7 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
         else :
             months_inactive = 0
             print(str(datetime.now()), "LOG", "scraper", "total author bets", len(author_bets), "author", author_name, dat)
+        #break #DEBUG - update only the latest month
     # create a dataframe of crawled data
     df_crawled = pd.DataFrame(author_bets).drop_duplicates(keep=False)
     total = total + len(df_crawled)
