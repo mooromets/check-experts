@@ -161,3 +161,18 @@ def check_date_month(check_date, year_month):
         return True
     else:
         return False
+
+# check if a page corresponds to author+date pair
+def is_page_consistent(page, author, date_str):
+    # check author
+    if page.find('body', "author-"+author) is None:
+        return False
+    # check date
+    for bet in page.find_all('div', "one-bet"):
+        #skip tablet and head rows
+        if not(len(set(bet['class']) & set(["head", "tablet-version"])) == 0):
+            continue
+        else:
+            if not check_date_month(bet.find('div', 'date').string, date_str):
+                return False
+    return True

@@ -51,7 +51,7 @@ total = 0
 for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
 #DEBUG for author_url in [random.choice(list(uniqueUrls))]:
 #DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/elvin/']:
-#DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/teplofevralya/', u'https://bookmaker-ratings.ru/author/etitov/', u'https://bookmaker-ratings.ru/author/elvin/']:
+#DEBUG for (author_cnt, author_url) in enumerate([u'https://bookmaker-ratings.ru/author/teplofevralya/', u'https://bookmaker-ratings.ru/author/etitov/', u'https://bookmaker-ratings.ru/author/elvin/'],1):
 #    driver.get(author_url) #author url has to be opened before navigating to staistics over months
     author_name = re.search("/[A-Za-z_0-9]+/$", author_url).group().replace('/',"")
     author_bets = []
@@ -59,16 +59,21 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
     #iterate over dates
     now = datetime.now()
     months_inactive = 0
-    for dat in br_scrape.month_year_down_iter(now.month, now.year, 3, 2015)  :
+    for dat in br_scrape.month_year_down_iter(now.month, now.year, 3, 2015):
         #if months_inactive == 0: time.sleep(random.randrange(5, 10)) #decrease the requests frequency
         #concat url
         month = "%4d-%02d" % dat
         driver.get(author_url + "#statistic?month=" + month)
-        time.sleep(15) #wait for AJAX stuff
+        while True:
+            #page source to Beautiful Soup
+            soup_level2=BeautifulSoup(driver.page_source, 'lxml')
+            if (br_scrape.is_page_consistent(soup_level2, author_name, month)):
+                break
+            else:
+                time.sleep(random.randrange(2, 5)) #wait for AJAX stuff
         print(str(datetime.now()), "LOG", "scraper", "open link", driver.current_url)
-        #page source to Beautiful Soup
-        soup_level2=BeautifulSoup(driver.page_source, 'lxml')
-        ##onthly result
+
+        ##monthly result
         was_active = False;
         #loop on all bets
         for bet in soup_level2.find_all('div', "one-bet"):
@@ -79,9 +84,6 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
             else:
                 was_active = True
                 author_bets.append(newBet)
-                if not br_scrape.check_date_month(newBet['placed-date'], month):
-                    ERR_CNT = ERR_CNT + 1
-                    print(str(datetime.now()), "ERR", "scraper", "WRONG MONTH", author_name, newBet["placed-date"], month)
 
         #check acivity
         if not was_active:

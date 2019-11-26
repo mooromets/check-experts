@@ -272,7 +272,6 @@ class TestAppendDfFile(unittest.TestCase):
         assert_frame_equal(df_new, df_sample_res)
         os.remove(PATH)
 
-
 class TestCheckDateMonth(unittest.TestCase):
     def test_simple(self):
         self.assertEqual(br_scrape.check_date_month('10.10.2010','2010-10'), True)
@@ -280,6 +279,27 @@ class TestCheckDateMonth(unittest.TestCase):
         self.assertEqual(br_scrape.check_date_month('31.12.2010','2010-12'), True)
         self.assertEqual(br_scrape.check_date_month('31.12.2010','2011-01'), False)
         self.assertEqual(br_scrape.check_date_month('31.05.2018','2018-06'), False)
+
+class TestIsPageConsistent(unittest.TestCase):
+    def test_simple(self):
+        src = '<body class="author-emmagadzhieva"> <div class="one-bet"> <div class="date">11.10.2018</div> </div> </body>'
+        page = BeautifulSoup(src, 'lxml')
+        self.assertEqual(br_scrape.is_page_consistent(page, 'emmagadzhieva', '2018-10'), True)
+
+    def test_wrong_author(self):
+        src = '<body class="author-foo"> <div class="one-bet"> <div class="date">11.10.2019</div> </div> </body>'
+        page = BeautifulSoup(src, 'lxml')
+        self.assertEqual(br_scrape.is_page_consistent(page, 'bar', '2019-10'), False)
+
+    def test_wrong_month(self):
+        src = '<body class="author-foo"> <div class="one-bet"> <div class="date">11.11.2019</div> </div> </body>'
+        page = BeautifulSoup(src, 'lxml')
+        self.assertEqual(br_scrape.is_page_consistent(page, 'foo', '2019-10'), False)
+
+    def test_no_bets(self):
+        src = '<body class="author-foo">  </body>'
+        page = BeautifulSoup(src, 'lxml')
+        self.assertEqual(br_scrape.is_page_consistent(page, 'foo', '2019-10'), True)
 
 
 if __name__ == '__main__':
