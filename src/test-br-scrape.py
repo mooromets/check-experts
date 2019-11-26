@@ -13,11 +13,9 @@ from pandas.util.testing import assert_frame_equal
 
 class TestMonthYearDownIter(unittest.TestCase):
     def test_simple(self):
-        sample = ['2019-12', '2019-11', '2019-10', '2019-09', '2019-08', '2019-07']
-        idx = 0
-        for x in br_scrape.month_year_down_iter(12, 2019, 6, 2019):
+        sample = [(2019,12), (2019,11), (2019,10), (2019,9), (2019,8), (2019,7)]
+        for (idx, x) in enumerate(br_scrape.month_year_down_iter(12, 2019, 6, 2019), 0):
             self.assertEqual(x, sample[idx])
-            idx = idx + 1
 
 
 class TestGetUrlsFromHtml(unittest.TestCase):

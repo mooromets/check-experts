@@ -13,7 +13,7 @@ def month_year_down_iter(start_month, start_year, end_month, end_year):
     ym_end= 12*end_year + end_month - 1
     for ym in range( ym_start, ym_end, -1 ):
         y, m = divmod( ym, 12 )
-        yield "%4d-%02d" % (y, m+1)
+        yield (y, m+1)
 
 
 # from html get all unique links, which contain a keyword

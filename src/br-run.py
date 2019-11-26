@@ -51,8 +51,7 @@ total = 0
 for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
 #DEBUG for author_url in [random.choice(list(uniqueUrls))]:
 #DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/elvin/']:
-#DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/arturio/']:
-
+#DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/teplofevralya/', u'https://bookmaker-ratings.ru/author/etitov/', u'https://bookmaker-ratings.ru/author/elvin/']:
 #    driver.get(author_url) #author url has to be opened before navigating to staistics over months
     author_name = re.search("/[A-Za-z_0-9]+/$", author_url).group().replace('/',"")
     author_bets = []
@@ -61,9 +60,11 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
     now = datetime.now()
     months_inactive = 0
     for dat in br_scrape.month_year_down_iter(now.month, now.year, 3, 2015)  :
-        if months_inactive == 0: time.sleep(random.randrange(5, 15)) #decrease the requests frequency
+        #if months_inactive == 0: time.sleep(random.randrange(5, 10)) #decrease the requests frequency
         #concat url
-        driver.get(author_url + "#statistic?month=" + dat)
+        month = "%4d-%02d" % dat
+        driver.get(author_url + "#statistic?month=" + month)
+        time.sleep(15) #wait for AJAX stuff
         print(str(datetime.now()), "LOG", "scraper", "open link", driver.current_url)
         #page source to Beautiful Soup
         soup_level2=BeautifulSoup(driver.page_source, 'lxml')
@@ -78,23 +79,23 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
             else:
                 was_active = True
                 author_bets.append(newBet)
-                if not br_scrape.check_date_month(newBet['placed-date'], dat):
+                if not br_scrape.check_date_month(newBet['placed-date'], month):
                     ERR_CNT = ERR_CNT + 1
-                    print(str(datetime.now()), "ERR", "scraper", "WRONG MONTH", author_name, newBet["placed-date"], dat)
+                    print(str(datetime.now()), "ERR", "scraper", "WRONG MONTH", author_name, newBet["placed-date"], month)
 
         #check acivity
         if not was_active:
             months_inactive = months_inactive + 1
             #report inactivity
             if (months_inactive == 6):
-                print(str(datetime.now()), "LOG", "scraper", "author", author_name, "inactive 6 months", dat)
+                print(str(datetime.now()), "LOG", "scraper", "author", author_name, "inactive 6 months", month)
             #stop if more than a year of inactivity
             if (months_inactive > 13):
-                print(str(datetime.now()), "LOG", "scraper", "author", author_name, "stopped", dat)
+                print(str(datetime.now()), "LOG", "scraper", "author", author_name, "stopped", month)
                 break
         else :
             months_inactive = 0
-            print(str(datetime.now()), "LOG", "scraper", "total author bets", len(author_bets), "author", author_name, dat)
+            print(str(datetime.now()), "LOG", "scraper", "total author bets", len(author_bets), "author", author_name, month)
         #break #DEBUG - update only the latest month
     # create a dataframe of crawled data
     df_crawled = pd.DataFrame(author_bets).drop_duplicates(keep=False)
