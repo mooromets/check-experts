@@ -33,7 +33,7 @@ try:
 except NoSuchElementException:
     print(str(datetime.now()), "LOG", "scraper", "no AD")
 
-uniqueUrls = [
+urls = random.shuffle([
     u'https://bookmaker-ratings.ru/author/teplofevralya/',
     u'https://bookmaker-ratings.ru/author/zhukov/',
     u'https://bookmaker-ratings.ru/author/netsenko/',
@@ -42,13 +42,12 @@ uniqueUrls = [
     u'https://bookmaker-ratings.ru/author/netsenko/',
     u'https://bookmaker-ratings.ru/author/ostapbender/',
     u'https://bookmaker-ratings.ru/author/nvaluev/',
-    u'https://bookmaker-ratings.ru/author/karpovvyacheslav/']
+    u'https://bookmaker-ratings.ru/author/karpovvyacheslav/'])
 
 
 bets = []
 
-for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
-
+for author_url in urls:
     author_name = re.search("/[A-Za-z_0-9]+/$", author_url).group().replace('/',"")
     month = "%4d-%02d" % (datetime.now().year, datetime.now().month)
     time.sleep(random.randrange(10, 15)) #decrease the requests frequency
@@ -78,3 +77,6 @@ df = pd.DataFrame(bets)
 df = df.sort_values(by=['placed-date','author','date'],
                     ascending=[False, True, False])
 print(df[['author','date','match', 'stake', 'factor']])
+
+#watch -d -n X CMD
+#while true; reset && CMD; sleep `shuf -i 100-2500 -n 1`; done
