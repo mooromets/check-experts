@@ -176,3 +176,92 @@ def is_page_consistent(page, author, date_str):
             if not check_date_month(bet.find('div', 'date').string, date_str):
                 return False
     return True
+
+
+#TODO remove duplicate function
+# read one bet from an html-object bet_src
+# time_crawled, author_name - will be added to the bet as is
+def read_bet_U(bet_src, time_crawled, author_name):
+    #skip tablet and head rows
+    if not(len(set(bet_src['class']) & set(["head", "tablet-version"])) == 0):
+        return None
+    else :
+        ##create bet
+        record_bet = {}
+        # date crawled
+        record_bet["crawled-date"] = time_crawled
+        #get type
+        typeDict = {u'Ординар' : "single"
+            ,u'Экспресс' : "accu"
+            }
+        record_bet["type"] = typeDict.get(bet_src.find('div', "type").string, "N")
+        #get date
+        record_bet["placed-date"] = bet_src.find('div', "date").string
+        #get status
+        bet_stat = bet_src.find('div', "status")
+        if bet_stat.string != u'Ожидание':
+            return None #don't store upcoming events
+        outcomeDict = {u'Проигрыш' : "L"
+            ,u'Возврат' : "R"
+            ,u'Выигрыш' : "W"
+            ,u'Ожидание' : "U"
+            }
+        record_bet["status"] = outcomeDict.get(bet_stat.string, "X")
+
+        #process single and multi differently
+        if record_bet["type"] == "single" :
+            #get factor
+            factor_tag = bet_src.find('div', "factor")
+            factor_value_tag = factor_tag.find('div', "factor-value")
+            if (factor_value_tag is None) :
+                print(str(datetime.now()), "ERR", "scraper", "empty factor", author_name, record_bet["placed-date"], factor_tag)
+                return None
+            else :
+                record_bet["factor"] = float(
+                    factor_value_tag["data-factor-dec"].replace(",", "."))
+            #get stake
+            bet_match = bet_src.find('div', "match")
+            bet_match_name = bet_match.find('a', "match-name")
+            record_bet["match"] = bet_match_name.string
+            bet_date = bet_match.find('div', "express-date")
+            record_bet["date"] = bet_date.string
+            record_bet["stake"] = bet_src.find('div', "stake").string
+        elif record_bet["type"] == "accu":
+            for exp in bet_src.find_all('div', "express-group"):
+                final_tag = exp.find('div', "final-row")
+                #get factor
+                factor_tag = final_tag.find('div', "factor")
+                factor_value_tag = factor_tag.find('div', "factor-value")
+                if (factor_value_tag is None) :
+                    print(str(datetime.now()), "ERR", "scraper", "empty factor", author_name, record_bet["placed-date"], factor_tag)
+                    return None
+                else :
+                    record_bet["factor"] = float(
+                        factor_value_tag["data-factor-dec"].replace(",", "."))
+                #match will contain all factors for singles
+                record_bet["match"] = u''
+                record_bet["date"] = record_bet["placed-date"]
+                for exp_row in exp.find_all('div', "express-row"):
+                    if"final-row" in exp_row["class"]:
+                        continue
+                    else:
+                        #get match
+                        match_exp = exp_row.find('div', "match")
+                        if match_exp.find('div', "express-date").string > record_bet["date"]: #TODO correct comparison
+                            record_bet["date"] = match_exp.find('div', "express-date").string
+                        #get factor
+                        factor_tag = exp_row.find('div', "factor")
+                        factor_value_tag = factor_tag.find('div', "factor-value")
+                        if (factor_value_tag is None) :
+                            print(str(datetime.now()), "ERR", "scraper", "empty factor", author_name, dat, factor_tag)
+                            continue
+                        else :
+                            record_bet["match"] = record_bet["match"] + u' ' + factor_value_tag["data-factor-dec"].replace(",", ".")
+                #stake will contain the number of singles in multi
+                record_bet["stake"] = str(record_bet["match"].count('.'))
+                #TODO remove code duplicates
+        else :
+            print(str(datetime.now()), "ERR", "scraper", "unknown bet type", author_name, record_bet["placed-date"], record_bet["type"])
+            return None
+        record_bet["author"] = author_name
+        return record_bet
