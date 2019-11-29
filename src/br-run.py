@@ -60,17 +60,21 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
     now = datetime.now()
     months_inactive = 0
     for dat in br_scrape.month_year_down_iter(now.month, now.year, 3, 2015):
-        #if months_inactive == 0: time.sleep(random.randrange(5, 10)) #decrease the requests frequency
+#        if months_inactive == 0: time.sleep(random.randrange(3, 5)) #decrease the requests frequency
         #concat url
         month = "%4d-%02d" % dat
         driver.get(author_url + "#statistic?month=" + month)
-        while True:
+        max_tries = 60
+        while max_tries > 0:
             #page source to Beautiful Soup
             soup_level2=BeautifulSoup(driver.page_source, 'lxml')
             if (br_scrape.is_page_consistent(soup_level2, author_name, month)):
                 break
             else:
                 time.sleep(random.randrange(2, 5)) #wait for AJAX stuff
+            max_tries = max_tries - 1
+        if max_tries == 0:
+            continue
         print(str(datetime.now()), "LOG", "scraper", "open link", driver.current_url)
 
         ##monthly result
