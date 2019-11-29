@@ -33,7 +33,7 @@ try:
 except NoSuchElementException:
     print(str(datetime.now()), "LOG", "scraper", "no AD")
 
-urls = random.shuffle([
+urls = [
     u'https://bookmaker-ratings.ru/author/teplofevralya/',
     u'https://bookmaker-ratings.ru/author/zhukov/',
     u'https://bookmaker-ratings.ru/author/netsenko/',
@@ -42,8 +42,8 @@ urls = random.shuffle([
     u'https://bookmaker-ratings.ru/author/netsenko/',
     u'https://bookmaker-ratings.ru/author/ostapbender/',
     u'https://bookmaker-ratings.ru/author/nvaluev/',
-    u'https://bookmaker-ratings.ru/author/karpovvyacheslav/'])
-
+    u'https://bookmaker-ratings.ru/author/karpovvyacheslav/']
+random.shuffle(urls)
 
 bets = []
 
