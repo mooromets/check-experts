@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import re
 import time
+import io #DEBUG
 
 
 url = "https://bookmaker-ratings.ru/"
@@ -72,11 +73,15 @@ for author_url in urls:
             continue
         else:
             bets.append(newBet)
+    #DEBUG
+    with io.open(month + author_name +'.xml', 'w', encoding="utf-8") as f_out:
+        f_out.write(soup_level2.prettify())
+        f_out.close()
 
 df = pd.DataFrame(bets)
 df = df.sort_values(by=['placed-date','author','date'],
                     ascending=[False, True, False])
-print(df[['author','date','match', 'stake', 'factor']])
+print(df[['placed-date', 'author','date','match', 'stake', 'factor']])
 
 #watch -d -n X CMD
 #while true; reset && CMD; sleep `shuf -i 100-2500 -n 1`; done
