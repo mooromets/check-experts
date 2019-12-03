@@ -59,7 +59,7 @@ for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
     #iterate over dates
     now = datetime.now()
     months_inactive = 0
-    for dat in br_scrape.month_year_down_iter(now.month, now.year, 3, 2015):
+    for dat in br_scrape.month_year_down_iter(now.month, now.year, 10, 2019):
 #        if months_inactive == 0: time.sleep(random.randrange(3, 5)) #decrease the requests frequency
         #concat url
         month = "%4d-%02d" % dat
