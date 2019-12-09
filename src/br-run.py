@@ -47,6 +47,8 @@ print(str(datetime.now()), "LOG", "scraper", "experts' urls=", len(uniqueUrls))
 
 ERR_CNT = 0
 
+uniqueUrls = list(uniqueUrls)
+random.shuffle(uniqueUrls)
 total = 0
 for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
 #DEBUG for author_url in [random.choice(list(uniqueUrls))]:
