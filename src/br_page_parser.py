@@ -11,9 +11,6 @@ from selenium.webdriver.firefox.options import Options
 import logging
 import re
 
-
-logger = logging.getLogger('logger')
-
 # BrPageParser - parses pages from bookmaker-ratings.ru
 # here comes all the staff , relevant to specific website
 # TODO create a base parser?
@@ -30,7 +27,7 @@ class BrPageParser:
 
     # get url
     def get(self, url):
-        logger.debug('URL get: %s', url)
+        logging.info('URL get: %s', url)
         self.webdriver.get(url)
 
     # open home page
@@ -42,9 +39,9 @@ class BrPageParser:
         try:
             adv_button = self.webdriver.find_element_by_id('float-banner-close')
             adv_button.click()
-            logger.debug('AD closed')
+            logging.info('AD closed')
         except NoSuchElementException:
-            logger.warning('there was no AD')
+            logging.warning('there was no AD')
 
     # start working with website
     def startSession(self):
@@ -53,18 +50,21 @@ class BrPageParser:
 
     # return a list of experts, listed on a dedicated web page
     def getExpertsList(self):
-        self.webdriver.get(self.experts_list_url)
+        self.get(self.experts_list_url)
         #expand all predictors
         button = self.webdriver.find_element_by_class_name("predictors-reveal-btn")
         button.click()
         uniqueUrls = br_scrape.get_urls_from_html(self.webdriver.page_source, "author")
-        # yield authors names (nicknames)
+        # get names from urls
+        names = []
         for url in uniqueUrls:
-            yield re.search("/[A-Za-z_0-9]+/$", url).group().replace('/',"")
+            tmp = re.search("/[A-Za-z_0-9]+/$", url).group().replace('/',"")
+            names.append(tmp.lower())
+        return set(names)
 
     # get all expert's bets in the selected month
     def getExpertBets(self, name, year, month, time_crawled):
-        self.webdriver.get(self.author_stats_pattern % (name, year, month))
+        self.get(self.author_stats_pattern % (name, year, month))
         datum = "%4d-%02d" % (year, month) # TODO refactor br_scrape.is_page_consistent()
 
         # try to obtain data from page
@@ -78,7 +78,7 @@ class BrPageParser:
                 time.sleep(random.randrange(2, 5)) #wait for AJAX stuff
             max_tries = max_tries - 1
         if max_tries == 0:
-            logger.error('Could not load page for: name=%s and date=%4d-%02d', name, year, month)
+            logging.error('Could not load page for: name=%s and date=%4d-%02d', name, year, month)
             return []
 
         bets = []
