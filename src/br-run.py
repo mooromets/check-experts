@@ -1,6 +1,8 @@
 # coding=utf-8
 
 import br_scrape
+import br_page_parser
+import db_utils
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -13,108 +15,41 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import re
 import time
+import logging
+import getopt, sys
 
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s;;%(levelname)s;;%(message)s")
 
-url = "https://bookmaker-ratings.ru/forecast_homepage/" #start with experts list
-out_dir = "data" #output directory
+# read commandline arguments, first
+fullCmdArguments = sys.argv
+# - further arguments
+argumentList = fullCmdArguments[1:]
+
 time_crawled = datetime.now().strftime("%d-%m-%Y %H:%M")
 
 # create a new Firefox session
 options = Options()
 options.headless = True
-driver = webdriver.Firefox(options=options)
-driver.implicitly_wait(10)
-driver.get(url)
+parserBR = br_page_parser.BrPageParser(webdriver.Firefox(options=options))
 
-#After opening the url above, close AD
-try:
-    adv_button = driver.find_element_by_id('float-banner-close')
-    adv_button.click()
-    print(str(datetime.now()), "LOG", "scraper", "AD closed")
-except NoSuchElementException:
-    print(str(datetime.now()), "LOG", "scraper", "no AD")
+now = datetime.now()
 
-#expand all predictors
-python_button = driver.find_element_by_class_name("predictors-reveal-btn")
-python_button.click()
-
-#page source
-soup_level1=BeautifulSoup(driver.page_source, 'lxml')
-
-uniqueUrls = br_scrape.get_urls_from_html(driver.page_source, "author")
-
-print(str(datetime.now()), "LOG", "scraper", "experts' urls=", len(uniqueUrls))
-
-ERR_CNT = 0
-
-uniqueUrls = list(uniqueUrls)
-random.shuffle(uniqueUrls)
-total = 0
-for (author_cnt, author_url) in enumerate(uniqueUrls, 1):
-#DEBUG for author_url in [random.choice(list(uniqueUrls))]:
-#DEBUG for author_url in [u'https://bookmaker-ratings.ru/author/elvin/']:
-#DEBUG for (author_cnt, author_url) in enumerate([u'https://bookmaker-ratings.ru/author/teplofevralya/', u'https://bookmaker-ratings.ru/author/etitov/', u'https://bookmaker-ratings.ru/author/elvin/'],1):
-#    driver.get(author_url) #author url has to be opened before navigating to staistics over months
-    author_name = re.search("/[A-Za-z_0-9]+/$", author_url).group().replace('/',"")
-    author_bets = []
-
-    #iterate over dates
-    now = datetime.now()
+for expert in argumentList:
+    if not db_utils.if_expert_exists(expert):
+        continue
     months_inactive = 0
-    for dat in br_scrape.month_year_down_iter(now.month, now.year, 3, 2015):
-#        if months_inactive == 0: time.sleep(random.randrange(3, 5)) #decrease the requests frequency
-        #concat url
-        month = "%4d-%02d" % dat
-        driver.get(author_url + "#statistic?month=" + month)
-        max_tries = 60
-        while max_tries > 0:
-            #page source to Beautiful Soup
-            soup_level2=BeautifulSoup(driver.page_source, 'lxml')
-            if (br_scrape.is_page_consistent(soup_level2, author_name, month)):
-                break
-            else:
-                time.sleep(random.randrange(2, 5)) #wait for AJAX stuff
-            max_tries = max_tries - 1
-        if max_tries == 0:
-            continue
-        print(str(datetime.now()), "LOG", "scraper", "open link", driver.current_url)
-
-        ##monthly result
-        was_active = False;
-        #loop on all bets
-        for bet in soup_level2.find_all('div', "one-bet"):
-            newBet = br_scrape.read_bet(bet, time_crawled, author_name)
-            if newBet is None:
-                #skip tablet and head rows
-                continue
-            else:
-                was_active = True
-                author_bets.append(newBet)
-
-        #check acivity
-        if not was_active:
+    for dat in br_scrape.month_year_down_iter(now.month, now.year, 4, 2015):
+        bets =  parserBR.getExpertBets(expert, dat[0], dat[1], time_crawled)
+        db_utils.insert_untracked_bets(bets)
+        if len(bets) == 0:
             months_inactive = months_inactive + 1
-            #report inactivity
-            if (months_inactive == 6):
-                print(str(datetime.now()), "LOG", "scraper", "author", author_name, "inactive 6 months", month)
             #stop if more than a year of inactivity
             if (months_inactive > 13):
-                print(str(datetime.now()), "LOG", "scraper", "author", author_name, "stopped", month)
+                logging.info('Stop by inactivity.Expert=%s;Y-m=%4d-%02d;bets=%d;months-inactivity=%d',
+                    expert, dat[0], dat[1], len(bets), months_inactive)
                 break
-        else :
+        else:
             months_inactive = 0
-            print(str(datetime.now()), "LOG", "scraper", "total author bets", len(author_bets), "author", author_name, month)
-        #break #DEBUG - update only the latest month
-    # create a dataframe of crawled data
-    df_crawled = pd.DataFrame(author_bets).drop_duplicates(keep=False)
-    total = total + len(df_crawled)
-    print(str(datetime.now()), "LOG", "scraper", "author", author_name, "unique author bets", len(df_crawled), "total bets", total)
-    if len(df_crawled) == 0:
-        #nothing to do
-        #TODO add info message
-        continue
-    path = os.path.join("..", out_dir, author_name + ".csv") #TODO fix pathes
-    br_scrape.append_df_to_file(df_crawled, path)
-    print(str(datetime.now()), "LOG", "scraper", "parsing progress, %", round(float(author_cnt) / len(uniqueUrls) * 100))
-
-print(str(datetime.now()), "errors count ", ERR_CNT)
+        logging.info('Expert=%s;Y-m=%4d-%02d;bets=%d;months-inactivity=%d',
+            expert, dat[0], dat[1], len(bets), months_inactive)

@@ -8,6 +8,8 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 
+import time
+import random
 import logging
 import re
 
@@ -75,7 +77,7 @@ class BrPageParser:
             if (br_scrape.is_page_consistent(page_source, name, datum)):
                 break
             else:
-                time.sleep(random.randrange(2, 5)) #wait for AJAX stuff
+                time.sleep(random.randrange(4, 8)) #wait for AJAX stuff
             max_tries = max_tries - 1
         if max_tries == 0:
             logging.error('Could not load page for: name=%s and date=%4d-%02d', name, year, month)
