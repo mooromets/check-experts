@@ -39,7 +39,7 @@ for expert in argumentList:
     if not db_utils.if_expert_exists(expert):
         continue
     months_inactive = 0
-    for dat in br_scrape.month_year_down_iter(now.month, now.year, 4, 2015):
+    for dat in br_scrape.month_year_down_iter(now.month, now.year, 12, 2019): #4 2015
         bets =  parserBR.getExpertBets(expert, dat[0], dat[1], time_crawled)
         db_utils.insert_untracked_bets(bets)
         if len(bets) == 0:
