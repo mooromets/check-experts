@@ -1,0 +1,6 @@
+python br-run.py etitov tuktik rinatbilyaletdinov karpovvyacheslav vsinitsin gcherdantsev lovchev 373761 igorkytmanov plysenkov netsenko
+python br-run.py jordi nobel falcao1984 chaplygin kazakov stavkaprognozsport kozhevnikov emmagadzhieva dkazansky zhukov simonovdmitry
+python br-run.py nvaluev gomelskiy ostapbender arturio mlebedev kruglov odemwingie elvin ddonskoy dehtyarev
+python br-run.py achakvetadze nkovalchuk teplofevralya aksenovaleksandr andronov vartanyan avishnevskiy bmr_user_1482 naguchevroman zayceva petrik kgenich
+
+python br-run.py netsenko falcao1984 chaplygin zhukov nvaluev ostapbender teplofevralya karpovvyacheslav
